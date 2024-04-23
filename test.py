@@ -4,21 +4,39 @@ import requests
 
 def get_assist(query):
     url = 'https://u384232-8174-307abb43.westc.gpuhub.com:8443/chat/knowledge_base_chat'
+    history = '''[
+        {
+            "content": "我们来玩成语接龙，我先来，生龙活虎",
+            "createAt": 1713163951123,
+            "id": "pPwYTkEp",
+            "meta": "iavatar",
+            "parentId": "undefined",
+            "role": "user",
+            "title": "undefined",
+            "updateAt": 1713163951123
+        },
+        {
+            "content": "虎头虎脑",
+            "createAt": 1713163951123,
+            "id": "pPwYTkEp",
+            "meta": "iavatar",
+            "parentId": "undefined",
+            "role": "assistant",
+            "title": "undefined",
+            "updateAt": 1713163951123
+        }
+    ]'''
+    origin = json.loads(history)
+    transhistory = [
+        {"role": item["role"], "content": item["content"]} for item in origin
+    ]
+    print(json.dumps(transhistory, ensure_ascii=False, indent=4))
     data = {
-        "query": "介绍下虚拟宠物医院学习系统",
+        "query": query,
         "knowledge_base_name": "samples",
         "top_k": 5,
         "score_threshold": 1,
-        "history": [
-            {
-                "role": "user",
-                "content": "我们来玩成语接龙，我先来，生龙活虎"
-            },
-            {
-                "role": "assistant",
-                "content": "虎头虎脑"
-            }
-        ],
+        "history": transhistory,
         "stream": False,
         "local_doc_url": False
     }

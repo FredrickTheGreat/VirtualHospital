@@ -1,5 +1,7 @@
 from exts import db
 from datetime import datetime
+
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -14,44 +16,78 @@ class User(db.Model):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
+
 class Case(db.Model):
     __tablename__ = 'case'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), nullable=False)
+    type = db.Column(db.String(255), nullable=False)
     admission = db.Column(db.Text)
     examination = db.Column(db.Text)
     diagnosis = db.Column(db.Text)
     treatment_plan = db.Column(db.Text)
     # 关系定义，'lazy' 定义了如何加载相关对象
     case_studies = db.relationship('Case2', backref='case', lazy=True)
+
     def as_dict(self):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 
 class Case2(db.Model):
     __tablename__ = 'case2'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
     media_type = db.Column(db.Enum('photo', 'video'), nullable=False)
-    media_url = db.Column(db.String(2048), nullable=False)
+    media_url = db.Column(db.JSON, nullable=False)
+    sign = db.Column(db.Enum('0', '1', '2'), nullable=False)
 
     def as_dict(self):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
-class DepartmentInformation(db.Model):
-    __tablename__ = 'department_information'
+
+class DepartmentInfo(db.Model):
+    __tablename__ = 'department_info'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, comment='科室id')
     name = db.Column(db.String(255), nullable=False, comment='科室名称')
-    can_view = db.Column(db.Integer, default=1, nullable=False, comment='是否可以被访问（1 可以 0 不行）', info={'invisible': True})
-    function_json_list = db.Column(db.Text, nullable=False, comment='存放各功能的名称及介绍')
+    can_view = db.Column(db.Integer, default=1, nullable=False, comment='是否可以被访问（1 可以 0 不行）',
+                         info={'invisible': True})
+    picture = db.Column(db.JSON, nullable=False, comment='科室图片')
     department_info = db.Column(db.String(1023), nullable=True, comment='科室介绍')
-    responsible_person = db.Column(db.Integer, nullable=False, comment='负责人角色（1-前台,2-助理,3-执业兽医师）')
+    video = db.Column(db.JSON, nullable=False, comment='科室视频')
+
+    __table_args__ = (
+        db.UniqueConstraint('id', name='department_information_pk_2'),
+        {'comment': '科室信息表'},
+    )
 
     def as_dict(self):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class Case3(db.Model):
+    __tablename__ = 'case3'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.Integer, nullable=False, comment='就诊人id')
+    file = db.Column(db.String(255), nullable=False, comment='文件存储路径')
+    update_time = db.Column(db.TIMESTAMP, nullable=False, default=datetime.now, comment='更新时间')
+    phone = db.Column(db.String(255), nullable=False)
+    age = db.Column(db.Integer, nullable=True)
+    gender = db.Column(db.String(255), nullable=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('id', name='case_pk'),
+        {'comment': '病例档案'},
+    )
+
+    def as_dict(self):
+        """将对象转换为字典"""
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 
 class Exam(db.Model):
     __tablename__ = 'exam'
@@ -68,6 +104,7 @@ class Exam(db.Model):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
+
 class ExamRecord(db.Model):
     __tablename__ = 'exam_record'
 
@@ -77,23 +114,27 @@ class ExamRecord(db.Model):
     exam_time = db.Column(db.Integer, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False, default=datetime.now)
     score = db.Column(db.Integer, nullable=False)
+
     def as_dict(self):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 
 class FeeItem(db.Model):
     __tablename__ = 'fee_item'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    type = db.Column(db.Integer, nullable=False, comment='收费项目类型（1-药品, 2-实验室检查, 3-介质, 4-住院）')
-    price = db.Column(db.Integer, nullable=False, comment='价格')
-    info = db.Column(db.Integer, nullable=True, comment='收费项目介绍')
-    img_url_list = db.Column(db.String(1023), nullable=True, comment='图片所在地址')
-    update_time = db.Column(db.TIMESTAMP, nullable=True, comment='更新时间')
+    type = db.Column(db.String(255), nullable=True, comment='收费项目类型')
+    price = db.Column(db.Integer, nullable=True, comment='价格')
+    description = db.Column(db.String(1023), nullable=True, comment='收费项目介绍')
+    img = db.Column(db.String(255), nullable=True, comment='图片所在地址')
+    update_time = db.Column(db.TIMESTAMP, nullable=True, comment='更新时间',default=datetime.now())
+    name = db.Column(db.String(255), nullable=True, comment="收费项目名称")
 
     def as_dict(self):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
 
 class TestQuestionPool(db.Model):
     __tablename__ = 'test_question_pool'
@@ -107,11 +148,11 @@ class TestQuestionPool(db.Model):
     D = db.Column(db.Text, nullable=False)
     type = db.Column(db.String(255), nullable=False)
     rightchoice = db.Column(db.String(255), nullable=False)
+    is_delete = db.Column(db.Integer, default=0, nullable=False, comment='(0为在使用， 1为已删除)')
 
     def as_dict(self):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
 
 
 class Visitor(db.Model):
@@ -130,4 +171,3 @@ class Visitor(db.Model):
     def as_dict(self):
         """将对象转换为字典"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
