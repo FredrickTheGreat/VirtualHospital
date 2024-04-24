@@ -28,7 +28,7 @@ def get_assist(query):
     ]'''
     origin = json.loads(history)
     transhistory = [
-        {"role": item["role"], "content": item["content"]} for item in origin
+        {"role": item["role"], "content": item["content"]} for item in origin if item["role"] != "assistant"
     ]
     print(json.dumps(transhistory, ensure_ascii=False, indent=4))
     data = {

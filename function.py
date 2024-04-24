@@ -924,10 +924,10 @@ def get_assist(message):
     for i in range(len(message)-1):
         history.append(message[i])
     # 使用模型进行处理
-    url = 'https://u384232-8174-307abb43.westc.gpuhub.com:8443/chat/knowledge_base_chat'
+    url = 'http://localhost:6006/chat/knowledge_base_chat'
     print(history)
     transhistory = [
-        {"role": item["role"], "content": item["content"]} for item in history
+        {"role": item["role"], "content": item["content"]} for item in history if item["role"] != "assistant"
     ]
     print(json.dumps(transhistory, ensure_ascii=False, indent=4))
     data = {
@@ -937,12 +937,14 @@ def get_assist(message):
         "score_threshold": 1,
         "history": transhistory,
         "stream": False,
-        "model":"chatglm3-6b",
-        "local_doc_url": False
+        "model_name": "chatglm3-6b",
+        "temperature": 0.7,
+        "max_tokens": 0,
+        "prompt_name": "default"
     }
     # Convert data to JSON string
     response = requests.post(url, data=json.dumps(data))
-    response = response.json()
-    value1 = response['answer']
+    data=response.json()
+    value1 = data["answer"]
     print(value1)
     return jsonify({"message": value1, 'code': 200}), 200
